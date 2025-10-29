@@ -13,6 +13,7 @@ export default function ConfirmBooking() {
         const res = await fetch(
           `http://localhost:5006/api/booking/confirm/${bookingId}`
         );
+
         const data = await res.json();
 
         if (res.ok && data.booking) {
@@ -29,7 +30,7 @@ export default function ConfirmBooking() {
         setMessage("Server error while confirming booking.");
       } finally {
         setLoading(false);
-        setTimeout(() => navigate("/cities"), 2000);
+        setTimeout(() => navigate("/email-login"), 2000);
       }
     };
 
@@ -43,12 +44,6 @@ export default function ConfirmBooking() {
       ) : (
         <>
           <h1 className="text-3xl font-bold mb-4">{message}</h1>
-          <button
-            onClick={() => navigate("/cities")}
-            className="mt-4 px-6 py-3 rounded-xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-cyan-400 hover:scale-105 transition-all font-semibold text-white shadow-lg"
-          >
-            Go to Cities
-          </button>
         </>
       )}
     </div>
