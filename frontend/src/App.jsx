@@ -6,7 +6,6 @@ import SignupPage from "./pages/SignupPage";
 import ResetPassword from "./pages/ResetPassword";
 import VerifyEmail from "./pages/VerifyEmail";
 import AdminDashboard from "./pages/AdminDashboard";
-
 import ProtectedRoute from "./components/ProtectedRoute";
 import CitiesPage from "./pages/CitiesPage";
 import ClubsPage from "./pages/ClubsPage";
@@ -26,7 +25,7 @@ export default function App() {
         <Route path="/email-login" element={<EmailLogin />} />
       </Route>
 
-      {/* Protected Routes */}
+      {/* ✅ Protected Routes */}
       <Route
         path="/admin"
         element={
@@ -35,6 +34,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/cities"
         element={
@@ -43,14 +43,30 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-      <Route path="/clubs/:cityId" element={<ClubsPage />} />
-      <Route path="/club/:clubId" element={<ClubDetails />} />
+
+      <Route
+        path="/clubs/:cityId"
+        element={
+          <ProtectedRoute>
+            <ClubsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/club/:clubId"
+        element={
+          <ProtectedRoute>
+            <ClubDetails />
+          </ProtectedRoute>
+        }
+      />
+
       <Route path="/register" element={<RegisterForm />} />
       <Route path="/confirm-booking/:bookingId" element={<ConfirmBooking />} />
 
-      {/* 🔹 Default route → login */}
+      {/* Default route */}
       <Route path="/" element={<Navigate to="/email-login" replace />} />
-      {/* Redirect unknown routes to login */}
       <Route path="*" element={<Navigate to="/email-login" replace />} />
     </Routes>
   );

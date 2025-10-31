@@ -64,9 +64,33 @@ export default function ClubDetails() {
     }
   }, [editBookingId]);
 
-  const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = async (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
 
+    if (name === "date" && value) {
+      try {
+        const res = await fetch(
+          `http://localhost:5006/api/booking/check-date?clubId=${clubId}&date=${value}`
+        );
+
+        const data = await res.json();
+
+        if (!data.available) {
+          setErrors((prev) => ({
+            ...prev,
+            date: "This date is already booked. Please choose another date.",
+          }));
+
+          setFormData((prev) => ({ ...prev, date: "" }));
+        } else {
+          setErrors((prev) => ({ ...prev, date: "" }));
+        }
+      } catch (err) {
+        console.error("Date check error", err);
+      }
+    }
+  };
   // ✅ Regex-based validation function
   const validateForm = () => {
     const newErrors = {};
@@ -374,9 +398,10 @@ export default function ClubDetails() {
                 name="date"
                 value={formData.date}
                 onChange={handleChange}
+                min={new Date().toISOString().split("T")[0]}
                 className={`w-full p-4 rounded-xl bg-white/20 border ${
                   errors.date ? "border-red-400" : "border-white/30"
-                } text-white focus:ring-2 focus:ring-fuchsia-400 outline-none`}
+                } text-white`}
               />
               {errors.date && (
                 <p className="text-red-400 text-sm mt-1">{errors.date}</p>
@@ -405,6 +430,7 @@ export default function ClubDetails() {
             {/* Submit */}
             <button
               type="submit"
+              disabled={errors.date}
               className="w-full py-4 rounded-xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-cyan-400 hover:from-fuchsia-500 hover:to-pink-400 transition-all duration-300 font-semibold text-white shadow-lg hover:scale-[1.03]"
             >
               Confirm Booking

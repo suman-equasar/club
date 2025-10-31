@@ -11,6 +11,23 @@ exports.addBooking = async (req, res) => {
     const club = await Club.findById(clubId);
     if (!club) return res.status(404).json({ message: "Club not found" });
 
+    const existingBooking = await Booking.findOne({
+      club: clubId,
+      email,
+      date: {
+        $gte: new Date(date),
+        $lt: new Date(new Date(date).setDate(new Date(date).getDate() + 1)),
+      },
+    });
+
+    // ❌ If found, block repeat booking
+    if (existingBooking) {
+      return res.status(400).json({
+        message:
+          "You already have a booking on this date for this club with this email.",
+      });
+    }
+
     const booking = await Booking.create({
       club: clubId,
       name,
@@ -209,5 +226,50 @@ exports.updateBooking = async (req, res) => {
   } catch (err) {
     console.error("Update Booking Error:", err);
     res.status(500).json({ message: err.message });
+  }
+};
+exports.getBookedDates = async (req, res) => {
+  try {
+    const { clubId } = req.params;
+
+    const bookings = await Booking.find({ club: clubId }).select("date");
+    const bookedDates = bookings.map(
+      (b) => new Date(b.date).toISOString().split("T")[0]
+    );
+
+    res.json({ bookedDates });
+  } catch (err) {
+    console.error("Error fetching booked dates:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+exports.checkDateAvailability = async (req, res) => {
+  try {
+    const { clubId, date } = req.query;
+
+    if (!date) {
+      return res.status(400).json({
+        available: false,
+        message: "Date required",
+      });
+    }
+
+    const start = new Date(date);
+    const end = new Date(date);
+    end.setDate(end.getDate() + 1);
+
+    const existing = await Booking.findOne({
+      club: clubId,
+      date: { $gte: start, $lt: end },
+    });
+
+    if (existing) {
+      return res.json({ available: false });
+    }
+
+    res.json({ available: true });
+  } catch (err) {
+    console.error("Error checking date:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };
