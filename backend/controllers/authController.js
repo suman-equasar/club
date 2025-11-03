@@ -136,8 +136,8 @@ exports.login = async (req, res) => {
 exports.verifyEmail = async (req, res) => {
   try {
     // 1️⃣ Get token and trim spaces
-    console.log("Received token:", token); // Add this line
     const token = req.query.token?.trim();
+    console.log("Received token:", token); // Add this line
 
     if (!token) {
       return res.send(`
@@ -186,7 +186,7 @@ exports.verifyEmail = async (req, res) => {
             <p>Redirecting to login...</p>
             <script>
               setTimeout(() => {
-                window.location.href = 'http://192.168.1.43:5173/login';
+                window.location.href = '${FRONTEND_URL}/login';
               }, 2500);
             </script>
           </div>

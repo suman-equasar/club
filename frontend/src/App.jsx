@@ -13,11 +13,13 @@ import EmailLogin from "./pages/EmailLogin";
 import RegisterForm from "./pages/RegisterForm";
 import ClubDetails from "./pages/ClubDetails";
 import ConfirmBooking from "./pages/ConfirmBooking";
+import Home from "./pages/Home";
 
 export default function App() {
   return (
     <Routes>
       <Route element={<AuthLayout />}>
+        <Route path="/" element={<Home />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/reset-password" element={<ResetPassword />} />
@@ -53,21 +55,14 @@ export default function App() {
         }
       />
 
-      <Route
-        path="/club/:clubId"
-        element={
-          <ProtectedRoute>
-            <ClubDetails />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/club/:clubId" element={<ClubDetails />} />
 
       <Route path="/register" element={<RegisterForm />} />
       <Route path="/confirm-booking/:bookingId" element={<ConfirmBooking />} />
 
       {/* Default route */}
-      <Route path="/" element={<Navigate to="/email-login" replace />} />
-      <Route path="*" element={<Navigate to="/email-login" replace />} />
+      <Route path="/" element={<Navigate to="/home" replace />} />
+      <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );
 }

@@ -176,8 +176,18 @@ exports.updateBooking = async (req, res) => {
     const booking = await Booking.findById(bookingId).populate("club");
     if (!booking) return res.status(404).json({ message: "Booking not found" });
 
-    // ✅ Check edit limit
+    if (booking.status === "confirmed") {
+      return res.status(400).json({
+        message: "This booking is already confirmed and cannot be edited.",
+      });
+    }
+    if (new Date(booking.date) < new Date()) {
+      return res.status(400).json({
+        message: "You cannot edit a booking for a past date.",
+      });
+    }
     if (booking.editCount >= 2) {
+      // ✅ Check edit limit
       return res
         .status(400)
         .json({ message: "You have reached the maximum of 2 edits." });

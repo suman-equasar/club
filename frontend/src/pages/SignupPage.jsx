@@ -12,7 +12,7 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://192.168.1.43:5006/api/auth/signup", {
+      const res = await fetch("http://192.168.1.74:5006/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, username }),

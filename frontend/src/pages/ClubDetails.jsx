@@ -12,6 +12,7 @@ export default function ClubDetails() {
   const editBookingId = queryParams.get("editBooking");
 
   const [club, setClub] = useState(null);
+  const [loadingEdit, setLoadingEdit] = useState(false);
   const [errors, setErrors] = useState({}); // ❗ Error messages for each field
 
   const [formData, setFormData] = useState({
@@ -39,10 +40,16 @@ export default function ClubDetails() {
   // ✅ Fetch booking once if editing
   useEffect(() => {
     if (editBookingId) {
+      setLoadingEdit(true);
+
       fetch(`http://localhost:5006/api/booking/${editBookingId}`)
         .then((res) => res.json())
         .then((data) => {
           if (data.booking) {
+            if (data.booking.status === "confirmed") {
+              alert("Your booking is already confirmed. You cannot edit it.");
+              navigate("/"); // redirect
+            }
             // ✅ Pre-fill form
             setFormData({
               name: data.booking.name,
@@ -54,13 +61,17 @@ export default function ClubDetails() {
               description: data.booking.description,
             });
 
-            // ✅ Update club info too (for banner + details)
+            // ✅ Update club info too
             if (data.booking.club) {
               setClub(data.booking.club);
             }
           }
+          setLoadingEdit(false); // ✅ Stop loader here
         })
-        .catch((err) => console.error("Error fetching booking:", err));
+        .catch((err) => {
+          console.error("Error fetching booking:", err);
+          setLoadingEdit(false); // ✅ Also stop if error
+        });
     }
   }, [editBookingId]);
 
@@ -290,6 +301,12 @@ export default function ClubDetails() {
             🎟️ Book Your Spot
           </h2>
 
+          {loadingEdit && (
+            <div className="flex justify-center items-center mb-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Name */}
             <div>
@@ -433,7 +450,7 @@ export default function ClubDetails() {
               disabled={errors.date}
               className="w-full py-4 rounded-xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-cyan-400 hover:from-fuchsia-500 hover:to-pink-400 transition-all duration-300 font-semibold text-white shadow-lg hover:scale-[1.03]"
             >
-              Confirm Booking
+              {editBookingId ? "Update Booking" : "Confirm Booking"}
             </button>
           </form>
         </div>

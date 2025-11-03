@@ -19,7 +19,7 @@ export default function VerifyEmail() {
     const verifyAccount = async () => {
       try {
         const res = await fetch(
-          `http://192.168.1.38:5006/api/auth/verify-email?token=${token}`
+          `http://192.168.1.74:5006/api/auth/verify-email?token=${token}`
         );
 
         if (!res.ok) {
