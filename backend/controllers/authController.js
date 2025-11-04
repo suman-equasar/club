@@ -135,76 +135,42 @@ exports.login = async (req, res) => {
 
 exports.verifyEmail = async (req, res) => {
   try {
-    // 1️⃣ Get token and trim spaces
     const token = req.query.token?.trim();
-    console.log("Received token:", token); // Add this line
 
     if (!token) {
-      return res.send(`
-        <html>
-          <body style="display:flex;align-items:center;justify-content:center;height:100vh;background:#111;color:white;font-family:sans-serif;">
-            <div style="text-align:center">
-              <h2>❌ Invalid verification link</h2>
-              <p>Please check your email and try again.</p>
-            </div>
-          </body>
-        </html>
-      `);
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid or missing token",
+      });
     }
 
-    // 2️⃣ Find user with token that hasn't expired
     const user = await User.findOne({
       verificationToken: token,
       verificationTokenExpires: { $gt: Date.now() },
     });
 
     if (!user) {
-      return res.send(`
-        <html>
-          <body style="display:flex;align-items:center;justify-content:center;height:100vh;background:#111;color:white;font-family:sans-serif;">
-            <div style="text-align:center">
-              <h2>❌ Invalid or expired verification link</h2>
-              <p>Please request a new verification email.</p>
-            </div>
-          </body>
-        </html>
-      `);
+      return res.status(400).json({
+        status: "error",
+        message: "Expired or invalid verification link. Request a new one.",
+      });
     }
 
-    // 3️⃣ Mark user as verified
     user.isVerified = true;
     user.verificationToken = undefined;
     user.verificationTokenExpires = undefined;
     await user.save();
 
-    // 4️⃣ Show success message and redirect to login
-    res.send(`
-      <html>
-        <body style="display:flex;align-items:center;justify-content:center;height:100vh;background:#111;color:white;font-family:sans-serif;">
-          <div style="text-align:center">
-            <h2>✅ Account Verified!</h2>
-            <p>Redirecting to login...</p>
-            <script>
-              setTimeout(() => {
-                window.location.href = '${FRONTEND_URL}/login';
-              }, 2500);
-            </script>
-          </div>
-        </body>
-      </html>
-    `);
+    return res.status(200).json({
+      status: "success",
+      message: "Email verified successfully",
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).send(`
-      <html>
-        <body style="display:flex;align-items:center;justify-content:center;height:100vh;background:#111;color:white;font-family:sans-serif;">
-          <div style="text-align:center">
-            <h2>❌ Server Error</h2>
-            <p>Please try again later.</p>
-          </div>
-        </body>
-      </html>
-    `);
+    console.error("Email verify error:", err);
+    return res.status(500).json({
+      status: "error",
+      message: "Server error while verifying email",
+    });
   }
 };
 

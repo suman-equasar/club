@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthForm from "../components/AuthForm";
 import ForgotPasswordModal from "./ForgotPasswordModal";
+import Swal from "sweetalert2";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -29,7 +30,13 @@ export default function LoginPage() {
       localStorage.setItem("token", data.token);
 
       localStorage.setItem("user", JSON.stringify(data.user));
-      alert("Login successful");
+      Swal.fire({
+        icon: "success",
+        title: "Login Successful 🎉",
+        text: "Redirecting...",
+        timer: 1800,
+        showConfirmButton: false,
+      });
 
       if (data.user.role === "admin") {
         navigate("/admin");
@@ -37,7 +44,11 @@ export default function LoginPage() {
         navigate("/cities");
       }
     } catch (err) {
-      setError(err.message);
+      Swal.fire({
+        icon: "error",
+        title: "Login Failed ❌",
+        text: err.message,
+      });
     } finally {
       setLoading(false);
     }

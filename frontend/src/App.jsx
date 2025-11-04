@@ -20,6 +20,7 @@ export default function App() {
     <Routes>
       <Route element={<AuthLayout />}>
         <Route path="/" element={<Home />} />
+
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/reset-password" element={<ResetPassword />} />
@@ -46,14 +47,7 @@ export default function App() {
         }
       />
 
-      <Route
-        path="/clubs/:cityId"
-        element={
-          <ProtectedRoute>
-            <ClubsPage />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/clubs/:cityId" element={<ClubsPage />} />
 
       <Route path="/club/:clubId" element={<ClubDetails />} />
 

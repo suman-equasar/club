@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import AuthForm from "../components/AuthForm";
-
+import Swal from "sweetalert2";
 export default function SignupPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,11 +22,24 @@ export default function SignupPage() {
       if (!res.ok) throw new Error(data.message || "Signup failed");
 
       // ✅ Instead of navigating, show a message
-      setSuccessMessage(
-        "✅ Signup successful! Please check your email to verify your account before logging in."
-      );
+      Swal.fire({
+        title: "Verify Your Email 🎉",
+        html: `
+          <p>We have sent a verification link to:</p>
+          <strong>${email}</strong><br><br>
+          <p>Please check your inbox & spam folder.</p>
+        `,
+        icon: "success",
+        confirmButtonColor: "#4F46E5",
+        confirmButtonText: "OK",
+      });
     } catch (err) {
-      setError(err.message);
+      Swal.fire({
+        title: "Error ❌",
+        text: err.message,
+        icon: "error",
+        confirmButtonColor: "#EF4444",
+      });
     } finally {
       setLoading(false);
     }
