@@ -231,9 +231,7 @@ export default function Home() {
         ref={aboutRef}
         className="bg-gradient-to-b from-gray-900 to-black text-white pt-24 pb-20 px-6 lg:px-14"
       >
-        <h2 className="text-5xl font-extrabold text-center mb-10">
-          About ClubVerse
-        </h2>
+        <h2 className="text-5xl font-extrabold text-center mb-10">About Us</h2>
 
         <p className="text-center text-gray-400 max-w-3xl mx-auto mb-14 text-lg">
           We connect nightlife lovers to the most exclusive clubs with VIP

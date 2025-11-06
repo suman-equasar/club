@@ -3,22 +3,18 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthForm from "../components/AuthForm";
 import ForgotPasswordModal from "./ForgotPasswordModal";
-import Swal from "sweetalert2";
+import { toast } from "react-toastify";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  // 👉 Add state for modal open/close
   const [showForgotModal, setShowForgotModal] = useState(false);
 
   const handleLogin = async ({ email, password }) => {
-    setError("");
     setLoading(true);
 
     try {
-      const res = await fetch("http://192.168.1.74:5006/api/auth/login", {
+      const res = await fetch("http://192.168.1.90:5006/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -27,28 +23,21 @@ export default function LoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Login failed");
 
+      // ✅ Save token and user info
       localStorage.setItem("token", data.token);
-
       localStorage.setItem("user", JSON.stringify(data.user));
-      Swal.fire({
-        icon: "success",
-        title: "Login Successful 🎉",
-        text: "Redirecting...",
-        timer: 1800,
-        showConfirmButton: false,
+
+      // ✅ Show quick toast + navigate immediately
+      toast.success(`Welcome, ${data.user.username || "User"} 👋`, {
+        autoClose: 1500,
       });
 
-      if (data.user.role === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/cities");
-      }
+      const redirectPath = data.user.role === "admin" ? "/admin" : "/cities";
+
+      // Slight delay just for smoother UX (optional)
+      setTimeout(() => navigate(redirectPath), 800);
     } catch (err) {
-      Swal.fire({
-        icon: "error",
-        title: "Login Failed ❌",
-        text: err.message,
-      });
+      toast.error(err.message || "Login failed");
     } finally {
       setLoading(false);
     }
@@ -59,11 +48,9 @@ export default function LoginPage() {
       <AuthForm
         mode="login"
         onSubmit={handleLogin}
-        // 👇 Pass a prop to open modal
         onForgotPassword={() => setShowForgotModal(true)}
       />
 
-      {/* 👇 Render modal conditionally */}
       <ForgotPasswordModal
         open={showForgotModal}
         onClose={() => setShowForgotModal(false)}

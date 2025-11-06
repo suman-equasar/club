@@ -5,15 +5,17 @@ const nodemailer = require("nodemailer");
 // 📦 Add a new booking
 exports.addBooking = async (req, res) => {
   try {
-    const { clubId, name, email, mobile, people, event, date, description } =
-      req.body;
-
+    const { clubId, mobile, people, event, date, description } = req.body;
+    const userId = req.user._id;
+    const name = req.user.username;
+    const email = req.user.email;
     const club = await Club.findById(clubId);
     if (!club) return res.status(404).json({ message: "Club not found" });
 
     const existingBooking = await Booking.findOne({
       club: clubId,
-      email,
+      user: userId,
+
       date: {
         $gte: new Date(date),
         $lt: new Date(new Date(date).setDate(new Date(date).getDate() + 1)),
@@ -30,6 +32,7 @@ exports.addBooking = async (req, res) => {
 
     const booking = await Booking.create({
       club: clubId,
+      user: userId, // ✅ Save user reference
       name,
       email,
       mobile,
@@ -38,7 +41,6 @@ exports.addBooking = async (req, res) => {
       date,
       description,
     });
-
     // --- Send email ---
     const transporter = nodemailer.createTransport({
       service: "gmail",
@@ -256,6 +258,7 @@ exports.getBookedDates = async (req, res) => {
 exports.checkDateAvailability = async (req, res) => {
   try {
     const { clubId, date } = req.query;
+    const userId = req.user.id; // ✅ Add this
 
     if (!date) {
       return res.status(400).json({
@@ -270,6 +273,7 @@ exports.checkDateAvailability = async (req, res) => {
 
     const existing = await Booking.findOne({
       club: clubId,
+      user: userId,
       date: { $gte: start, $lt: end },
     });
 

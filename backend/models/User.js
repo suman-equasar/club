@@ -78,8 +78,8 @@ const userSchema = new mongoose.Schema(
     resetPasswordToken: String,
     resetPasswordExpires: Date,
 
-    // ✅ Registration flow flag
-    isSignup: { type: Boolean, default: false },
+    // // ✅ Registration flow flag
+    // isSignup: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

@@ -15,9 +15,9 @@ export default function ClubDetails() {
   const [loadingEdit, setLoadingEdit] = useState(false);
   const [errors, setErrors] = useState({}); // ❗ Error messages for each field
 
+  const user = JSON.parse(localStorage.getItem("user"));
+
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
     mobile: "",
     people: "",
     event: "",
@@ -41,48 +41,63 @@ export default function ClubDetails() {
   useEffect(() => {
     if (editBookingId) {
       setLoadingEdit(true);
+      const token = localStorage.getItem("token"); // ✅ get token
 
-      fetch(`http://localhost:5006/api/booking/${editBookingId}`)
-        .then((res) => res.json())
+      fetch(`http://localhost:5006/api/booking/${editBookingId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // ✅ required for protected route
+        },
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to fetch booking");
+          return res.json();
+        })
         .then((data) => {
-          if (data.booking) {
-            if (data.booking.status === "confirmed") {
-              alert("Your booking is already confirmed. You cannot edit it.");
-              navigate("/"); // redirect
-            }
-            // ✅ Pre-fill form
-            setFormData({
-              name: data.booking.name,
-              email: data.booking.email,
-              mobile: data.booking.mobile,
-              date: data.booking.date.split("T")[0],
-              people: data.booking.people,
-              event: data.booking.event,
-              description: data.booking.description,
-            });
+          const booking = data.booking || data;
 
-            // ✅ Update club info too
-            if (data.booking.club) {
-              setClub(data.booking.club);
-            }
+          if (!booking) return;
+
+          if (booking.status === "confirmed") {
+            alert("Your booking is already confirmed. You cannot edit it.");
+            navigate("/cities");
+            return;
           }
-          setLoadingEdit(false); // ✅ Stop loader here
+
+          // ✅ Pre-fill form
+          setFormData({
+            mobile: booking.mobile || "",
+            date: booking.date ? booking.date.split("T")[0] : "",
+            people: booking.people || "",
+            event: booking.event || "",
+            description: booking.description || "",
+          });
+
+          if (booking.club) setClub(booking.club);
         })
         .catch((err) => {
           console.error("Error fetching booking:", err);
-          setLoadingEdit(false); // ✅ Also stop if error
-        });
+        })
+        .finally(() => setLoadingEdit(false));
     }
-  }, [editBookingId]);
+  }, [editBookingId, navigate]);
 
   const handleChange = async (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
 
+    const token = localStorage.getItem("token");
+
     if (name === "date" && value) {
       try {
         const res = await fetch(
-          `http://localhost:5006/api/booking/check-date?clubId=${clubId}&date=${value}`
+          `http://localhost:5006/api/booking/check-date?clubId=${clubId}&date=${value}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
 
         const data = await res.json();
@@ -105,21 +120,8 @@ export default function ClubDetails() {
   // ✅ Regex-based validation function
   const validateForm = () => {
     const newErrors = {};
-    const nameRegex = /^[A-Za-z\s]{3,30}$/;
-    const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/; // ✅ updated
+
     const mobileRegex = /^[0-9]{10}$/;
-
-    if (!formData.name.trim()) {
-      newErrors.name = "Name is required.";
-    } else if (!nameRegex.test(formData.name)) {
-      newErrors.name = "Enter a valid name (letters only, 3–30 chars).";
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required.";
-    } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = "Enter a valid email address.";
-    }
 
     if (!formData.mobile.trim()) {
       newErrors.mobile = "Mobile number is required.";
@@ -183,14 +185,15 @@ export default function ClubDetails() {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ clubId, ...formData }),
+      body: JSON.stringify({
+        clubId,
+        ...formData,
+      }),
     });
     const data = await res.json();
     alert(data.message || "Booking successful!");
 
     setFormData({
-      name: "",
-      email: "",
       mobile: "",
       people: "",
       event: "",
@@ -308,40 +311,6 @@ export default function ClubDetails() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Name */}
-            <div>
-              <input
-                type="text"
-                name="name"
-                placeholder="Your Name"
-                value={formData.name}
-                onChange={handleChange}
-                className={`w-full p-4 rounded-xl bg-white/20 border ${
-                  errors.name ? "border-red-400" : "border-white/30"
-                } placeholder-gray-300 text-white focus:ring-2 focus:ring-fuchsia-400 outline-none`}
-              />
-              {errors.name && (
-                <p className="text-red-400 text-sm mt-1">{errors.name}</p>
-              )}
-            </div>
-
-            {/* Email */}
-            <div>
-              <input
-                type="email"
-                name="email"
-                placeholder="Email Address"
-                value={formData.email}
-                onChange={handleChange}
-                className={`w-full p-4 rounded-xl bg-white/20 border ${
-                  errors.email ? "border-red-400" : "border-white/30"
-                } placeholder-gray-300 text-white focus:ring-2 focus:ring-fuchsia-400 outline-none`}
-              />
-              {errors.email && (
-                <p className="text-red-400 text-sm mt-1">{errors.email}</p>
-              )}
-            </div>
-
             {/* Mobile */}
             <div>
               <input

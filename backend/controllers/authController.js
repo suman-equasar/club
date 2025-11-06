@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 
-const FRONTEND_URL = "http://192.168.1.74:5173"; // change to your frontend IP or domain
+const FRONTEND_URL = "http://192.168.1.90:5173"; // change to your frontend IP or domain
 
 // Helper function to send emails
 const sendEmail = async (to, subject, html) => {
@@ -26,41 +26,21 @@ exports.signup = async (req, res) => {
 
     let existingUser = await User.findOne({ email });
 
+    // ✅ If user already exists
     if (existingUser) {
+      // ❌ If user is not verified
       if (!existingUser.isVerified) {
-        // Only generate new token if expired
-        if (
-          !existingUser.verificationTokenExpires ||
-          existingUser.verificationTokenExpires < Date.now()
-        ) {
-          const token = crypto.randomBytes(32).toString("hex");
-          existingUser.verificationToken = token;
-          existingUser.verificationTokenExpires =
-            Date.now() + 24 * 60 * 60 * 1000; // 24 hours
-          await existingUser.save();
-        }
-
-        // Send verification email
-        const verifyLink = `${FRONTEND_URL}/verify-email?token=${existingUser.verificationToken}`;
-        await sendEmail(
-          email,
-          "Verify Your Account",
-          `<h2>Welcome Back, ${existingUser.username} 👋</h2>
-           <p>Click the link below to verify your account:</p>
-           <a href="${verifyLink}" style="padding:10px 15px;background:#4F46E5;color:white;text-decoration:none;border-radius:6px;">Verify Account</a>
-           <p>This link will expire in 24 hours.</p>`
-        );
-
         return res.status(200).json({
           message:
-            "Email already registered but not verified. Verification link sent.",
+            "Email already registered but not verified. Please check your inbox to verify your account.",
         });
       }
 
+      // ✅ If user already verified
       return res.status(400).json({ message: "Email already registered" });
     }
 
-    // Create new user
+    // ✅ Create new user
     const hashedPassword = await bcrypt.hash(password, 10);
     const verificationToken = crypto.randomBytes(32).toString("hex");
     const verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
@@ -76,7 +56,9 @@ exports.signup = async (req, res) => {
 
     await newUser.save();
 
+    // ✅ Send verification email for new account
     const verifyLink = `${FRONTEND_URL}/verify-email?token=${verificationToken}`;
+
     await sendEmail(
       email,
       "Verify Your Account",
@@ -86,12 +68,15 @@ exports.signup = async (req, res) => {
        <p>This link will expire in 24 hours.</p>`
     );
 
-    res.status(201).json({
+    return res.status(201).json({
       message:
         "Signup successful! Please check your email to verify your account.",
     });
   } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
+    console.error("Signup Error:", err);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
   }
 };
 
@@ -113,11 +98,14 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Invalid email or password" });
 
     const token = jwt.sign(
-      { id: user._id, email: user.email },
+      {
+        _id: user._id, // use _id to match req.user._id
+        username: user.username, // include name for booking
+        email: user.email,
+      },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "7d" } // ✅ increase expiry
     );
-
     res.status(200).json({
       message: "Login successful",
       token,
@@ -137,7 +125,11 @@ exports.verifyEmail = async (req, res) => {
   try {
     const token = req.query.token?.trim();
 
+    // ✅ Log token received from frontend
+    console.log("📩 Received token from URL:", token);
+
     if (!token) {
+      console.log("❌ No token received");
       return res.status(400).json({
         status: "error",
         message: "Invalid or missing token",
@@ -146,27 +138,34 @@ exports.verifyEmail = async (req, res) => {
 
     const user = await User.findOne({
       verificationToken: token,
+      isVerified: false,
       verificationTokenExpires: { $gt: Date.now() },
     });
 
+    // ✅ Log if user found or not
     if (!user) {
+      console.log("❌ No user found for token OR token expired");
       return res.status(400).json({
         status: "error",
         message: "Expired or invalid verification link. Request a new one.",
       });
     }
 
+    console.log("✅ User found for token:", user.email);
+
     user.isVerified = true;
-    user.verificationToken = undefined;
-    user.verificationTokenExpires = undefined;
+    user.verificationToken = null;
+    user.verificationTokenExpires = null;
     await user.save();
+
+    console.log("✅ Email verified successfully for:", user.email);
 
     return res.status(200).json({
       status: "success",
       message: "Email verified successfully",
     });
   } catch (err) {
-    console.error("Email verify error:", err);
+    console.error("❌ Email verify error:", err);
     return res.status(500).json({
       status: "error",
       message: "Server error while verifying email",
