@@ -1,14 +1,15 @@
-// LoginPage.jsx
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthForm from "../components/AuthForm";
 import ForgotPasswordModal from "./ForgotPasswordModal";
 import { toast } from "react-toastify";
+import { AuthContext } from "../context/AuthContext";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
+  const { login } = useContext(AuthContext); // ✅ use context
 
   const handleLogin = async ({ email, password }) => {
     setLoading(true);
@@ -23,18 +24,14 @@ export default function LoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Login failed");
 
-      // ✅ Save token and user info
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      // ✅ Save to context (automatically handles localStorage)
+      login(data.user, data.token);
 
-      // ✅ Show quick toast + navigate immediately
       toast.success(`Welcome, ${data.user.username || "User"} 👋`, {
         autoClose: 1500,
       });
 
       const redirectPath = data.user.role === "admin" ? "/admin" : "/cities";
-
-      // Slight delay just for smoother UX (optional)
       setTimeout(() => navigate(redirectPath), 800);
     } catch (err) {
       toast.error(err.message || "Login failed");

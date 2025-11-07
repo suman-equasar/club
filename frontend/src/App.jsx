@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import AuthLayout from "./layouts/AuthLayout";
 import LoginPage from "./pages/LoginPage";
@@ -14,23 +14,56 @@ import RegisterForm from "./pages/RegisterForm";
 import ClubDetails from "./pages/ClubDetails";
 import ConfirmBooking from "./pages/ConfirmBooking";
 import Home from "./pages/Home";
+import MyBookings from "./pages/MyBookings";
 
-// 🧩 Import React Toastify
+// ✅ Import Context
+import { AuthContext } from "./context/AuthContext";
+
+// 🧩 Toastify
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 export default function App() {
+  const { isAuthenticated, user, loading } = useContext(AuthContext);
+
+  if (loading) return null; // Wait for auth to load before showing routes
+
   return (
     <>
-      {/* 🧭 Your main app routes */}
       <Routes>
+        {/* 🔐 AuthLayout routes (login/signup/etc) */}
         <Route element={<AuthLayout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
+          {/* Redirect if already logged in */}
+          <Route
+            path="/login"
+            element={
+              isAuthenticated ? (
+                <Navigate
+                  to={user.role === "admin" ? "/admin" : "/cities"}
+                  replace
+                />
+              ) : (
+                <LoginPage />
+              )
+            }
+          />
+          <Route
+            path="/signup"
+            element={
+              isAuthenticated ? (
+                <Navigate
+                  to={user.role === "admin" ? "/admin" : "/cities"}
+                  replace
+                />
+              ) : (
+                <SignupPage />
+              )
+            }
+          />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/email-login" element={<EmailLogin />} />
+          <Route path="/" element={<Home />} />
         </Route>
 
         {/* ✅ Protected Routes */}
@@ -59,15 +92,15 @@ export default function App() {
           path="/confirm-booking/:bookingId"
           element={<ConfirmBooking />}
         />
+        <Route path="/my-bookings" element={<MyBookings />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
-      {/* ✅ Global toast container */}
+      {/* Global Toasts */}
       <ToastContainer
         position="top-right"
         autoClose={2000}
         hideProgressBar={false}
-        newestOnTop={false}
         closeOnClick
         pauseOnHover
         draggable

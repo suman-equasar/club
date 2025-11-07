@@ -30,7 +30,7 @@ export default function ConfirmBooking() {
         setMessage("Server error while confirming booking.");
       } finally {
         setLoading(false);
-        setTimeout(() => navigate("/cities"), 2000);
+        setTimeout(() => navigate("/my-bookings"), 2000);
       }
     };
 

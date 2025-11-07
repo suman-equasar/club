@@ -61,7 +61,7 @@ export default function ClubDetails() {
 
           if (booking.status === "confirmed") {
             alert("Your booking is already confirmed. You cannot edit it.");
-            navigate("/cities");
+            navigate("/my-bookings");
             return;
           }
 

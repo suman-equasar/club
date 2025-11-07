@@ -258,7 +258,7 @@ exports.getBookedDates = async (req, res) => {
 exports.checkDateAvailability = async (req, res) => {
   try {
     const { clubId, date } = req.query;
-    const userId = req.user.id; // ✅ Add this
+    const userId = req.user._id; // ✅ Add this
 
     if (!date) {
       return res.status(400).json({
@@ -284,6 +284,18 @@ exports.checkDateAvailability = async (req, res) => {
     res.json({ available: true });
   } catch (err) {
     console.error("Error checking date:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+exports.getUserBookings = async (req, res) => {
+  try {
+    const userId = req.user._id; // Comes from your auth middleware
+    const bookings = await Booking.find({ user: userId })
+      .populate("club", "name city image") // optional, to show club info
+      .sort({ date: -1 }); // latest first
+    res.status(200).json({ bookings });
+  } catch (err) {
+    console.error("Error fetching user bookings:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
