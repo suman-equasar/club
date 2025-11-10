@@ -22,6 +22,7 @@ import { AuthContext } from "./context/AuthContext";
 // 🧩 Toastify
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import ProfilePage from "./pages/ProfilePage";
 
 export default function App() {
   const { isAuthenticated, user, loading } = useContext(AuthContext);
@@ -88,6 +89,7 @@ export default function App() {
         <Route path="/clubs/:cityId" element={<ClubsPage />} />
         <Route path="/club/:clubId" element={<ClubDetails />} />
         <Route path="/register" element={<RegisterForm />} />
+        <Route path="/profile" element={<ProfilePage />} />
         <Route
           path="/confirm-booking/:bookingId"
           element={<ConfirmBooking />}
